@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
@@ -26,6 +27,22 @@ app.get('/api/health', (req, res) => {
 app.use('/api/weather', require('./routes/weatherRoutes'));
 app.use('/api/locations', require('./routes/locationRoutes'));
 app.use('/api/favorites', require('./routes/favoriteRoutes'));
+
+// Serve Client Static Assets in Production / Cloud Deployments
+const clientDistPath = path.join(__dirname, '../client/dist');
+app.use(express.static(clientDistPath));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  const indexFile = path.join(clientDistPath, 'index.html');
+  res.sendFile(indexFile, (err) => {
+    if (err) {
+      res.status(404).send('SkyCast Frontend Bundle Not Found. Please run "npm run build" in client.');
+    }
+  });
+});
 
 // Centralized Error Handling Middleware
 app.use(errorHandler);

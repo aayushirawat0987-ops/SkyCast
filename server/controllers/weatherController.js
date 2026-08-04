@@ -80,7 +80,34 @@ const getWeatherByCoords = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get extended forecast by city name
+ * @route   GET /api/weather/forecast?city=London&units=metric
+ * @access  Public
+ */
+const getForecast = async (req, res, next) => {
+  try {
+    const { city, units = 'metric' } = req.query;
+
+    if (!city) {
+      return res.status(400).json({
+        success: false,
+        message: 'City name parameter is required',
+      });
+    }
+
+    const weatherData = await fetchWeatherFromAPI(city, units);
+    return res.status(200).json({
+      success: true,
+      data: weatherData ? { hourly: weatherData.hourly, weekly: weatherData.weekly } : null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getWeatherByCity,
   getWeatherByCoords,
+  getForecast,
 };
